@@ -14,9 +14,16 @@ from __future__ import unicode_literals
 # import pybind11 generated symbols into the dvbs2rx namespace. Try from
 # bindings/ first, which works when importing from the build dir.
 try:
+    from .bindings import dvbs2rx_python
     from .bindings.dvbs2rx_python import *  # noqa: F401,F403
 except ImportError:
-    from .dvbs2rx_python import *  # noqa: F401,F403
+    # Try importing from the same directory (installed structure)
+    try:
+        from . import dvbs2rx_python
+        from .dvbs2rx_python import *  # noqa: F401,F403
+    except ImportError:
+        import dvbs2rx_python
+        from .dvbs2rx_python import *  # noqa: F401,F403
 
 # import any pure python here
 from .params import *  # noqa: F401, F403
