@@ -45,6 +45,7 @@
               pkg-config
               doxygen
               makeWrapper
+              qt5.wrapQtAppsHook
             ];
 
             buildInputs = with pkgs; [
@@ -60,6 +61,7 @@
               pythonEnv
               pythonPackages.numpy
               pythonPackages.scipy
+              qt5.qtwayland
             ];
             cmakeFlags = [
               "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
