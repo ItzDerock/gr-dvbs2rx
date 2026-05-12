@@ -43,7 +43,7 @@ endif(NOT dvbs2rx_sources)
 add_library(gnuradio-dvbs2rx SHARED ${dvbs2rx_sources})
 target_link_libraries(gnuradio-dvbs2rx
     PRIVATE ${LDPC_LIBS}
-    PRIVATE cpu_features
+    PRIVATE ${cpu_features_LIB}
     PUBLIC gnuradio::gnuradio-runtime
     PUBLIC gnuradio::gnuradio-filter
   )

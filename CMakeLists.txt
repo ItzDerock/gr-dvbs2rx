@@ -178,9 +178,24 @@ add_custom_target(uninstall
 ########################################################################
 # Add subdirectories
 ########################################################################
-SET(BUILD_TESTING OFF CACHE BOOL "Build libcpu_features without tests")
-add_subdirectory(cpu_features EXCLUDE_FROM_ALL)
-set_property(TARGET cpu_features PROPERTY POSITION_INDEPENDENT_CODE ON)
+########################################################################
+# Check for cpu_features dependency
+########################################################################
+find_package(CpuFeatures QUIET)
+if(CpuFeatures_FOUND)
+    message(STATUS "Found system cpu_features")
+    set(cpu_features_LIB CpuFeatures::cpu_features)
+else()
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cpu_features/CMakeLists.txt")
+        message(STATUS "Using internal cpu_features submodule")
+        SET(BUILD_TESTING OFF CACHE BOOL "Build libcpu_features without tests")
+        add_subdirectory(cpu_features EXCLUDE_FROM_ALL)
+        set_property(TARGET cpu_features PROPERTY POSITION_INDEPENDENT_CODE ON)
+        set(cpu_features_LIB cpu_features)
+    else()
+        message(FATAL_ERROR "cpu_features not found and submodule missing. Run git submodule update --init or install cpu_features")
+    endif()
+endif()
 
 add_subdirectory(include/gnuradio/dvbs2rx)
 add_subdirectory(lib)

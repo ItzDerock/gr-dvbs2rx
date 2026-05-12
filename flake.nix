@@ -56,10 +56,11 @@
               gmp
               volk
               gnuradio
+              cpu_features
               pythonEnv
               pythonPackages.numpy
               pythonPackages.scipy
-              ];
+            ];
             cmakeFlags = [
               "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
               "-DGR_PYTHON_DIR=${placeholder "out"}/${python.sitePackages}"
