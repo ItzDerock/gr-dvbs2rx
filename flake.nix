@@ -100,6 +100,11 @@
               cmake
               gnumake
               gcc
+              rustc
+              cargo
+              rust-analyzer
+              clippy
+              rustfmt
             ];
 
             shellHook = ''
