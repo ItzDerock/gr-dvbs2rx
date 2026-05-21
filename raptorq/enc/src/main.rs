@@ -155,7 +155,25 @@ fn encoder_thread(
         let source = encoder.source_packets();
         let repair_pkts = encoder.repair_packets(0, repair);
         debug!(sbn, src = source.len(), repair = repair_pkts.len(), "block encoded");
-        for p in source.into_iter().chain(repair_pkts) {
+        // Interleave repair with source so burst errors at block boundaries don't
+        // kill all repair symbols. Emit one repair every (k/repair) source packets.
+        let mut src_it = source.into_iter();
+        let mut rep_it = repair_pkts.into_iter();
+        let k_block = (block_size / SYMBOL_SIZE) as u32;
+        let rep_interval = if repair > 0 { (k_block / repair).max(1) } else { u32::MAX };
+        let mut src_count = 0u32;
+        let interleaved = std::iter::from_fn(move || {
+            if repair > 0 && src_count > 0 && src_count % rep_interval == 0 {
+                if let Some(r) = rep_it.next() {
+                    return Some(r);
+                }
+            }
+            match src_it.next() {
+                Some(s) => { src_count += 1; Some(s) }
+                None => rep_it.next(),
+            }
+        });
+        for p in interleaved {
             if out.send(p).is_err() {
                 return Ok(());
             }

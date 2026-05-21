@@ -104,6 +104,7 @@ struct BlockState {
     block_size: usize,
     decoder: SourceBlockDecoder,
     source_symbols: HashMap<u32, Vec<u8>>,
+    repair_count: u32,
     completed: Option<Vec<u8>>,
     first_seen: Instant,
 }
@@ -117,6 +118,7 @@ impl BlockState {
             block_size,
             decoder: SourceBlockDecoder::new(sbn_u8, oti, block_size as u64),
             source_symbols: HashMap::new(),
+            repair_count: 0,
             completed: None,
             first_seen: Instant::now(),
         }
@@ -131,6 +133,8 @@ impl BlockState {
             self.source_symbols
                 .entry(esi)
                 .or_insert_with(|| packet.data().to_vec());
+        } else {
+            self.repair_count += 1;
         }
         self.completed = self.decoder.decode(std::iter::once(packet));
     }
@@ -236,11 +240,12 @@ fn run_decoder(rx: Receiver<Vec<u8>>, args: Args) -> Result<()> {
                 }
                 Some(b) if b.first_seen.elapsed() >= timeout || should_force => {
                     let recovered = b.source_symbols.len();
+                    let repair = b.repair_count;
                     let data = b.best_effort();
                     pool.remove(&cursor);
                     stdout.write_all(&data).context("writing stdout")?;
                     besteffort_blocks += 1;
-                    warn!(sbn = cursor, recovered, "best-effort emit (timeout)");
+                    warn!(sbn = cursor, recovered, repair, "best-effort emit (timeout)");
                     cursor += 1;
                 }
                 None if started && (should_force || highest_seen >= cursor + max_in_flight) => {
